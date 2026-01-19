@@ -1,314 +1,320 @@
-# TP – Fondamentaux CI/CD & Automatisation des Tests
-
-## Contexte
-Dans ce TP, vous allez mettre en place les fondations de l’automatisation des tests et comprendre le rôle d’une pipeline
-CI/CD dans un projet Java.
-
-Vous travaillerez sur un mini moteur de calcul de prix (pricing engine) utilisé dans un contexte e-commerce.
-Chaque règle métier devra être automatiquement validée par des tests, et ces tests seront exécutés à chaque commit via une pipeline CI.
-
-### Objectif final :
-Aucun code ne doit être livré sans passer par les tests.
-
-
-## Objectifs pédagogiques
-À l’issue de ce TP, vous serez capables de :
-* Comprendre le fonctionnement d’une pipeline CI/CD
-* Écrire et exécuter des tests unitaires automatisés
-* Appliquer une démarche TDD (Test Driven Development)
-* Comprendre la différence entre :
-    * tests unitaires
-    * tests d’intégration
-* Comprendre pourquoi et comment un build CI échoue
-
-## Environnement technique
-* Java 11+
-* Maven
-* JUnit 5
-* Git
-* GitHub ou GitLab
-* IDE de votre choix
-
-## Structure attendue du projet
-```bash
-order-service
-├── pom.xml
-└── src
-    ├── main
-    │   └── java/com/devops/cicd
-    │       ├── PricingService.java
-    │       ├── PricingConfig.java
-    │       ├── PricingConfigLoader.java
-    │       └── PasswordPolicy.java
-    └── test
-        ├── java/com/devops/cicd
-        │   ├── PricingServiceTest.java
-        │   ├── PricingIntegrationTest.java
-        │   └── PasswordPolicyTest.java
-        └── resources
-            └── app.properties
-```
-
-## Partie A – Logique métier puis tests unitaires
-### Contexte métier
-
-Vous devez implémenter un service de calcul de prix avec les règles suivantes :
-
-Règles métier
-1. Remise VIP
-    * Si le client est VIP → remise de 10 %
-    * Sinon → aucune remise
-2. Frais de livraison
-    * Offerts si le montant est ≥ 50 €
-    * Sinon → 4.99 €
-3. TVA
-    * Appliquer un taux de TVA (ex: 20 %) sur le montant hors taxe
-4. Total final
-    * Calculer le montant TTC
-    * Appliquer la remise VIP
-    * Ajouter les frais de livraison
-
-
-### Étape 1 – Créer la configuration métier
-Créez la classe PricingConfig qui contient :
-* le taux de TVA *vatRate*
-* le seuil de livraison gratuite *freeShippingThreshold*
-* et les getters pour récupérer ces valeurs
-
-```java
-package com.devops.cicd;
-
-public class PricingConfig {
-    private final double vatRate;
-    private final double freeShippingThreshold;
-
-    public PricingConfig(double vatRate, double freeShippingThreshold) {
-        //TODO
-    }
-
-    public double getVatRate() {
-        //TODO
-    }
-
-    public double getFreeShippingThreshold() {
-        //TODO
-    }
-}
-
-```
-
-*Cette classe représente une dépendance du service métier.*
-
-### Étape 2 – Implémenter PricingService
-PricingService doit :
-* recevoir un PricingConfig via son constructeur
-* utiliser cette configuration pour effectuer les calculs
-
-```java
-public final class PricingService {
-
-    private final PricingConfig config;
-
-    public PricingService(PricingConfig config) {
-        //TODO
-    }
-
-    public double applyVat(double amountExclVat) {
-        //TODO
-    }
-
-    public double applyVipDiscount(double amount, boolean vip) {
-        //TODO
-    }
-
-    public double shippingCost(double amount) {
-        //TODO
-    }
-
-    /**
-     * - TVA appliquée d'abord : HT -> TTC
-     * - remise VIP appliquée sur TTC
-     * - frais de livraison ajoutés ensuite (calculés sur TTC)
-     */
-    public double finalTotal(double amountExclVat, boolean vip) {
-        //TODO
-    }
-}
-
-```
-
-### Étape 3 – Écrire les tests unitaires
-
-Dans PricingServiceTest :
-* Écrivez un test par règle métier
-* Fournissez une configuration contrôlée (valeurs codées en dur)
-* Les tests doivent :
-    * décrire le comportement attendu
-    * échouer tant que l’implémentation n’est pas correcte
-
-*💡 Un test = une règle métier*
-
-```java
-class PricingServiceTest {
-
-    private final PricingConfig fakeConfig = new PricingConfig(20.0, 50.0);
-    private final PricingService service = new PricingService(fakeConfig);
-    
-    //TODO
-}
-
-```
-
-### Étape 4 – Lancer les tests
-```bash
-mvn clean test
-```
-Résultat attendu
-* Les tests unitaires passent
-* Le build est SUCCESS
-
-
-## Partie B – Test d’intégration : composants réels ensemble
-### Objectif
-Comprendre ce qui distingue réellement un test d’intégration d’un test unitaire.
-
-### Principe du test d’intégration
-Dans cette partie, vous allez tester :
-* le chargement réel d’une configuration depuis un fichier
-* la logique métier complète
-* la collaboration entre plusieurs classes
-
-### Étape 1 – Ajouter une configuration réelle
-Créez le fichier src/test/resources/app.properties :
-```ini
-vatRate=20
-freeShippingThreshold=50
-```
-
-### Étape 2 – Charger la configuration
-Créez la classe *PricingConfigLoader* :
-* elle lit le fichier app.properties
-* elle crée un objet PricingConfig à partir du fichier
-
-```java
-public class PricingConfigLoader {
-
-    public PricingConfig load() {
-        //TODo
-    }
-
-    private String required(Properties props, String key) {
-        //TODO
-    }
-}
-```
-
-### Étape 3 – Écrire le test d’intégration
-Dans *PricingIntegrationTest* dans src/test/:
-* Chargez la configuration réelle depuis le fichier
-* Instanciez le PricingService avec cette configuration
-* Testez le scénario métier complet
-  Exemple :
-* montant HT = 100
-* TVA = 20 %
-* client VIP
-* livraison gratuite
-
-*Un test d’intégration vérifie que plusieurs composants réels fonctionnent correctement ensemble.*
-
-```java
-class PricingIntegrationTest {
-
-    @Test
-    void fullPricingFlow_withRealConfigFile() {
-        //TODO
-    }
-}
-```
-
-## Partie C – Tests d’abord (TDD)
-Dans cette partie, vous appliquerez une approche Test Driven Development.
-
-### Contexte métier
-Vous devez implémenter une politique de mot de passe sécurisé.
-
-Règles :
-* Un mot de passe est considéré comme fort s’il contient :
-* au moins 8 caractères
-* au moins une majuscule
-* au moins une minuscule
-* au moins un chiffre
-* au moins un caractère spécial
-
-### Étape 1 – Écrire uniquement les tests
-Créez PasswordPolicyTest dans src/test/ :
-* La classe PasswordPolicy n’existe pas encore
-* Les tests doivent décrire les règles de validation
-
-*Le projet ne compile pas : c’est normal (phase RED).*
-
-```java
-package com.devops.cicd;
-
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-class PasswordPolicyTest {
-    //TODO
-}
-
-```
-### Étape 2 – Créer la classe minimale
-Créez PasswordPolicy dans src/main/ avec une méthode statique :
-```java
-public class PasswordPolicy {
-
-    public static boolean isStrong(String password) {
-        return password != null;
-    }
-}
-```
-Retournez une valeur simple pour permettre la compilation.
-
-Lancer les tests uniquement pour la class *PasswordPolicyTest*
-```bash
-mvn test -Dtest=com.devops.cicd.PasswordPolicyTest
-```
-Résultat attendu
-* Les tests unitaires échouent
-* Le build est FAILURE
-
-### Étape 3 – Implémenter la logique
-Implémentez la méthode *isStrong* jusqu’à ce que tous les tests passent.
-
-Résultat attendu
-* Les tests unitaires passent
-* Le build est SUCCESS
-
-## Partie D – Pipeline CI
-### Objectif
-Automatiser l’exécution des tests à chaque commit.
-
-### Étape 1 – Créer un dépôt Git
-* Initialisez un dépôt Git
-* Poussez le projet sur GitHub
-
-### Étape 2 – Ajouter une pipeline CI
-#### GitHub Actions
-Créer .github/workflows/ci.yml
-
-### GitLab CI
-Créer .gitlab-ci.yml
-
-La pipeline doit contenir au moins deux jobs :
-1. unit-tests
-    * exécute uniquement les tests unitaires
-2. integration-tests
-    * dépend du job unit-tests
-    * exécute les tests d’intégration
-
-*Si unit-tests échoue, integration-tests ne démarre pas.*
+# Oups
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## BONUS – Qualité de code dans la pipeline CI (niveau avancé)
 ### Objectifs du bonus

@@ -39,3 +39,7 @@ jobs:
       - name: Run Integration tests
         run: mvn -Dtest=PricingIntegrationTest test
         working-directory: order-service
+
+      - name: Run tests and generate coverage
+        working-directory: order-service
+        run: mvn clean test jacoco:report

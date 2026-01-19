@@ -30,6 +30,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build and run tests
-        run: mvn clean test
+      - name: Run Unit tests
+        run: mvn -Dtest=PricingServiceTest test
+        run: mvn -Dtest=PasswordPolicyTest test
+        working-directory: order-service
+
+      - name: Run Integration tests
+        run: mvn -Dtest=PricingIntegrationTest test
         working-directory: order-service

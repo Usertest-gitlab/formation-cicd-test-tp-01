@@ -10,10 +10,10 @@ public class PricingConfig {
     }
 
     public double getVatRate() {
-        return this.vatRate;
+        return vatRate;
     }
 
     public double getFreeShippingThreshold() {
-        return this.freeShippingThreshold;
+        return freeShippingThreshold;
     }
 }

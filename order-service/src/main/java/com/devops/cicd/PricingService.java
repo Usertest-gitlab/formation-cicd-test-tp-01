@@ -9,7 +9,7 @@ public final class PricingService {
     }
 
     public double applyVat(double amountExclVat) {
-        return amountExclVat * 1.2; // prix avec TVA 20%
+        return amountExclVat * (1 + config.getVatRate() / 100.0); // prix avec TVA
     }
 
     public double applyVipDiscount(double amount, boolean vip) {
@@ -17,7 +17,7 @@ public final class PricingService {
     }
 
     public double shippingCost(double amount) {
-        return amount > 50 ? 0.0 : 4.99; // aucun frais de livraison si > 50
+        return amount > config.getFreeShippingThreshold() ? 0.0 : 4.99;
     }
 
     /**

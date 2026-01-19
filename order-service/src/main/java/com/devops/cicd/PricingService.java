@@ -1,3 +1,5 @@
+package com.devops.cicd;
+
 public final class PricingService {
 
     private final PricingConfig config;
@@ -7,15 +9,15 @@ public final class PricingService {
     }
 
     public double applyVat(double amountExclVat) {
-        return
+        return amountExclVat * 1.2; // prix avec TVA 20%
     }
 
     public double applyVipDiscount(double amount, boolean vip) {
-        //TODO
+        return vip ? amount * 0.9 : amount; // prix avec remise de 10% si VIP
     }
 
     public double shippingCost(double amount) {
-        //TODO
+        return amount > 50 ? 0.0 : 4.99; // aucun frais de livraison si > 50
     }
 
     /**
@@ -24,6 +26,9 @@ public final class PricingService {
      * - frais de livraison ajoutés ensuite (calculés sur TTC)
      */
     public double finalTotal(double amountExclVat, boolean vip) {
-        //TODO
+        double prix_ttc = applyVat(amountExclVat);
+        double prix_remise = applyVipDiscount(prix_ttc, vip);
+        double prix_final = prix_remise + shippingCost(prix_remise);
+        return prix_final;
     }
 }

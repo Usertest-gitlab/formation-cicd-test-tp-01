@@ -31,9 +31,10 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Run Unit tests
-        run: mvn -Dtest=PricingServiceTest test
-        run: mvn -Dtest=PasswordPolicyTest test
         working-directory: order-service
+        run: |
+          mvn -Dtest=PricingServiceTest test
+          mvn -Dtest=PasswordPolicyTest test
 
       - name: Run Integration tests
         run: mvn -Dtest=PricingIntegrationTest test
